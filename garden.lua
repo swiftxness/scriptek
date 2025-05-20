@@ -161,6 +161,45 @@ local Button = Tab:CreateButton({
 
 local Section = Tab:CreateSection("Player")
 
+local antiAfkActive = false
+local antiAfkThread = nil
+
+local Toggle = Tab:CreateToggle({
+   Name = "Anti-Afk",
+   CurrentValue = false,
+   Flag = "AntiAfkToggle", -- Egyedi azonosító a konfigurációhoz
+   Callback = function(Value)
+      antiAfkActive = Value
+      
+      if antiAfkActive then
+         -- Anti-Afk ciklus indítása
+         antiAfkThread = task.spawn(function()
+            local player = game.Players.LocalPlayer
+            local character = player.Character or player.CharacterAdded:Wait()
+            local humanoid = character:WaitForChild("Humanoid")
+            local hrp = character:WaitForChild("HumanoidRootPart")
+
+            while antiAfkActive do
+               -- Szimulálunk egy kis mozgást vagy ugrást
+               humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+               task.wait(0.5)
+               -- Visszaállítjuk a sétáló állapotot, ha szükséges
+               if humanoid.MoveDirection.Magnitude == 0 then
+                   humanoid:ChangeState(Enum.HumanoidStateType.Running)
+               end
+               task.wait(2) -- Várakozás a következő aktivitásig
+            end
+         end)
+      else
+         -- Anti-Afk kikapcsolása
+         if antiAfkThread and coroutine.status(antiAfkThread) ~= "dead" then
+            task.cancel(antiAfkThread)
+            antiAfkThread = nil
+         end
+      end
+   end,
+})
+
 local Player = game.Players.LocalPlayer
 local Character = Player.Character or Player.CharacterAdded:Wait()
 local Humanoid = Character:WaitForChild("Humanoid")
@@ -299,7 +338,7 @@ local buyingThread = nil
 
 local Dropdown = Tab:CreateDropdown({
    Name = "Autobuy Seeds",
-   Options = {"None", "Carrot", "Strawberry", "Blueberry", "Orange Tulip", "Tomato", "Corn", "Daffodil", "Watermelon", "Pumpkin", "Apple", "Bamboo", "Coconut", "Cactus", "Dragonfruit", "Mango", "Grape", "Mushroom", "Pepper", "Cocoa"},
+   Options = {"None", "Carrot", "Strawberry", "Blueberry", "Orange Tulip", "Tomato", "Corn", "Daffodil", "Watermelon", "Pumpkin", "Apple", "Bamboo", "Coconut", "Cactus", "Dragon Fruit", "Mango", "Grape", "Mushroom", "Pepper", "Cocoa", "Beanstalk"},
    CurrentOption = {"None"},
    MultipleOptions = true,
    Flag = "Dropdown1",
