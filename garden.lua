@@ -11,7 +11,7 @@ local Window = Rayfield:CreateWindow({
    DisableBuildWarnings = false, -- Prevents Rayfield from warning when the script has a version mismatch with the interface
 
    ConfigurationSaving = {
-      Enabled = true,
+      Enabled = false,
       FolderName = nil, -- Create a custom folder for your hub/game
       FileName = "Big Hub"
    },
@@ -293,89 +293,85 @@ local Toggle = Tab:CreateToggle({
    end,
 })
 
-local selectedSeed = "None"
+local selectedSeed = {}
 local isBuying = false
+local buyingThread = nil
 
 local Dropdown = Tab:CreateDropdown({
    Name = "Autobuy Seeds",
    Options = {"None", "Carrot", "Strawberry", "Blueberry", "Orange Tulip", "Tomato", "Corn", "Daffodil", "Watermelon", "Pumpkin", "Apple", "Bamboo", "Coconut", "Cactus", "Dragonfruit", "Mango", "Grape", "Mushroom", "Pepper", "Cocoa"},
    CurrentOption = {"None"},
-   MultipleOptions = false,
-   Flag = "Dropdown1", -- Ez marad "Dropdown1"
+   MultipleOptions = true,
+   Flag = "Dropdown1",
    Callback = function(Options)
-      selectedSeed = Options[1]
-
-      -- Leállítjuk az esetlegesen futó vásárlási ciklust
       isBuying = false
 
-      if selectedSeed == "None" then
+      -- Várunk, hogy előző ciklus biztosan kilépjen
+      task.wait()
+
+      if #Options == 0 or (#Options == 1 and Options[1] == "None") then
+         selectedSeed = {}
          return
       end
 
-      -- Rövid várakozás, hogy a korábbi ciklus biztosan leálljon
-      task.wait()
-
+      selectedSeed = Options
       isBuying = true
-      task.spawn(function()
+
+      -- Új coroutine indítása
+      buyingThread = coroutine.create(function()
          while isBuying do
-            if selectedSeed == "None" then -- Ellenőrzés a cikluson belül is, ha időközben "None"-ra váltana
-               isBuying = false
-               break
+            for _, seedName in ipairs(selectedSeed) do
+               if seedName ~= "None" then
+                  game:GetService("ReplicatedStorage"):WaitForChild("GameEvents"):WaitForChild("BuySeedStock"):FireServer(seedName)
+                  task.wait(0.01)
+               end
             end
-            local currentSeedToBuy = selectedSeed -- A ciklus elején rögzítjük az aktuális magot
-            if currentSeedToBuy == "None" then -- Dupla ellenőrzés a biztonság kedvéért
-                isBuying = false
-                break
-            end
-            local args = {currentSeedToBuy}
-            game:GetService("ReplicatedStorage"):WaitForChild("GameEvents"):WaitForChild("BuySeedStock"):FireServer(unpack(args))
-            task.wait(0.01)
+            task.wait(0.1)
          end
       end)
+      coroutine.resume(buyingThread)
    end,
 })
 
-local selectedGear = "None"
+local selectedGear = {}
 local isGear = false
+local gearThread = nil
 
 local Dropdown = Tab:CreateDropdown({
    Name = "Autobuy Gear",
-   Options = {"None", "Watering Can","Basic Sprinkler","Advanced Sprinkler","Godly Sprinkler","Master Sprinkler"},
+   Options = {"None", "Watering Can", "Basic Sprinkler", "Advanced Sprinkler", "Godly Sprinkler", "Master Sprinkler"},
    CurrentOption = {"None"},
-   MultipleOptions = false,
-   Flag = "Dropdown2", -- Ezt átírtam "Dropdown2"-re
+   MultipleOptions = true,
+   Flag = "Dropdown2",
    Callback = function(Options)
-      selectedGear = Options[1]
-
-      -- Leállítjuk az esetlegesen futó vásárlási ciklust
       isGear = false
 
-      if selectedGear == "None" then
+      -- Várunk, hogy az előző ciklus leálljon
+      task.wait()
+
+      if #Options == 0 or (#Options == 1 and Options[1] == "None") then
+         selectedGear = {}
          return
       end
 
-      -- Rövid várakozás, hogy a korábbi ciklus biztosan leálljon
-      task.wait()
-
+      selectedGear = Options
       isGear = true
-      task.spawn(function()
+
+      gearThread = coroutine.create(function()
          while isGear do
-            if selectedGear == "None" then -- Ellenőrzés a cikluson belül is, ha időközben "None"-ra váltana
-               isGear = false
-               break
+            for _, gearName in ipairs(selectedGear) do
+               if gearName ~= "None" then
+                  game:GetService("ReplicatedStorage"):WaitForChild("GameEvents"):WaitForChild("BuyGearStock"):FireServer(gearName)
+                  task.wait(0.01)
+               end
             end
-            local currentGearToBuy = selectedGear -- A ciklus elején rögzítjük az aktuális eszközt
-            if currentGearToBuy == "None" then -- Dupla ellenőrzés a biztonság kedvéért
-                isGear = false
-                break
-            end
-            local args = {currentGearToBuy}
-            game:GetService("ReplicatedStorage"):WaitForChild("GameEvents"):WaitForChild("BuyGearStock"):FireServer(unpack(args))
-            task.wait(0.01)
+            task.wait(0.1)
          end
       end)
+      coroutine.resume(gearThread)
    end,
 })
+
 
 local Section = Tab:CreateSection("Moonlit")
 
