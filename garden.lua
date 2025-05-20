@@ -378,7 +378,7 @@ local gearThread = nil
 
 local Dropdown = Tab:CreateDropdown({
    Name = "Autobuy Gear",
-   Options = {"None", "Watering Can", "Basic Sprinkler", "Advanced Sprinkler", "Godly Sprinkler", "Master Sprinkler"},
+   Options = {"None", "Watering Can", "Lightning Rod", "Basic Sprinkler", "Advanced Sprinkler", "Godly Sprinkler", "Master Sprinkler"},
    CurrentOption = {"None"},
    MultipleOptions = true,
    Flag = "Dropdown2",
