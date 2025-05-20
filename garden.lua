@@ -467,11 +467,18 @@ local Button = Tab:CreateButton({
 
       for x = minX, maxX, step do
          for z = minZ, maxZ, step do
-            local args = {
-               Vector3.new(x, fixedY, z),
-               seedName
-            }
-            game:GetService("ReplicatedStorage"):WaitForChild("GameEvents"):WaitForChild("Plant_RE"):FireServer(unpack(args))
+            if seedName == "Watercan" then
+               local args = {
+                  Vector3.new(x, fixedY, z)
+               }
+               game:GetService("ReplicatedStorage"):WaitForChild("GameEvents"):WaitForChild("Water_RE"):FireServer(unpack(args))
+            else
+               local args = {
+                  Vector3.new(x, fixedY, z),
+                  seedName
+               }
+               game:GetService("ReplicatedStorage"):WaitForChild("GameEvents"):WaitForChild("Plant_RE"):FireServer(unpack(args))
+            end
             task.wait(0.05) -- Kis várakozás, hogy ne legyen túl gyors
          end
       end
